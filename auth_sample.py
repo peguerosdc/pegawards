@@ -1,4 +1,3 @@
-from TwitterAPI import TwitterAPI
 from twitter_client import TwitterClient
 
 def get_api_keys():
@@ -25,3 +24,36 @@ if __name__ == '__main__':
     # Print the users metadata as an example
     user = client.me()
     print(f"User: {user['name']} ({user['id']}). Followers: {user['followers_count']}")
+    # Start creating a DB with the followers
+    db = dict()
+    for follower in client.get_followers():
+        follower_id = follower['id']
+        db[follower_id] = follower
+        db[follower_id]['RTs'] = 0
+        db[follower_id]['replies'] = 0
+        db[follower_id]['quotes'] = 0
+        db[follower_id]['favs'] = 0
+
+    # Get stats of every tweet in the timeline
+    i = 0
+    for tweet in client.get_tweets():
+        print(tweet)
+
+        # Get retweeters of this tweet
+        for retweeter in client.get_retweeters(tweet['id']):
+            # Update count in the db only for my followers
+            if retweeter in db:
+                db[retweeter]['RTs'] += 1
+
+        # Get Favs
+        # TODO
+
+        # Get replies
+        # TODO
+
+        # Get Quotes
+        # TODO
+
+        i += 1
+        if i==19:
+            break
