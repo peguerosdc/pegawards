@@ -92,8 +92,10 @@ class TwitterClient(object):
                 tweets = []
 
     def get_tweet_favs(self, tweet_id):
-        # TODO Get the stats of this tweet
-        return []
+        # Get the list of users who liked this tweet
+        req = self.api2.request(f"tweets/:{tweet_id}/liking_users")
+        res = req.response.json()
+        return [user["id"] for user in res.get("data", [])]
 
     def get_retweeters(self, tweet_id):
         # Get the list of everyone who has retweeted this tweet

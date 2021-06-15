@@ -1,4 +1,5 @@
 from twitter_client import TwitterClient
+import utils
 
 
 def get_api_keys():
@@ -41,14 +42,7 @@ if __name__ == "__main__":
     user = client.me()
     print(f"User: {user['name']} ({user['id']}). Followers: {user['followers_count']}")
     # Start creating a DB with the followers
-    db = dict()
-    for follower in client.get_followers():
-        follower_id = follower["id"]
-        db[follower_id] = follower
-        db[follower_id]["RTs"] = 0
-        db[follower_id]["replies"] = 0
-        db[follower_id]["quotes"] = 0
-        db[follower_id]["favs"] = 0
+    db = utils.get_db_of_followers(client.get_followers())
 
     # Get stats of every tweet in the timeline
     i = 0
@@ -62,7 +56,9 @@ if __name__ == "__main__":
                 db[retweeter]["RTs"] += 1
 
         # Get Favs
-        # TODO
+        for faver in client.get_tweet_favs(tweet["id"]):
+            if faver in db:
+                db[faver]["favs"] += 1
 
         # Get replies
         # TODO
