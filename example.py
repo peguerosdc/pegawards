@@ -1,5 +1,6 @@
-from twitter_client import TwitterClient
-import utils
+from twitter_awards.client import TwitterClient
+
+from twitter_awards import utils
 
 
 def get_api_keys():
