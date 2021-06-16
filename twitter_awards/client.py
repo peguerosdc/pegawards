@@ -1,8 +1,18 @@
 from TwitterAPI import TwitterAPI, TwitterPager
+from scrapper import TwitterScrapper
 
 
 class TwitterClient(object):
-    def __init__(self, api_key, api_key_secret, access_token, access_token_secret):
+    def __init__(
+        self,
+        api_key,
+        api_key_secret,
+        access_token,
+        access_token_secret,
+        csrf_token,
+        authorization,
+        cookie,
+    ):
         self.api1 = TwitterAPI(
             api_key,
             api_key_secret,
@@ -19,6 +29,7 @@ class TwitterClient(object):
             api_version="2",
             auth_type="oAuth1",
         )
+        self.scrapper = TwitterScrapper(csrf_token, authorization, cookie)
         # Init users data as it will be used in later requests
         self.me(refresh=True)
 
@@ -107,9 +118,7 @@ class TwitterClient(object):
         return res.get("ids", [])
 
     def get_quotes(self, tweet_id):
-        req = self.api1.request(f"search/tweets", params={"q": tweet_id})
-        # TODO
-        return []
+        return self.scrapper.get_quotes(tweet_id)
 
     def get_replies(self, tweet_id):
         # Consider this tweet is the beginning of a conversation
