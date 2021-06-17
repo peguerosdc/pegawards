@@ -55,12 +55,21 @@ if __name__ == "__main__":
 
     # List of possible operations that the user can perform on every tweet
     operations = [
+        ("quotes", client.get_quotes),
+        ("replies", client.get_replies),
         ("RTs", client.get_retweeters),
         ("favs", client.get_tweet_favs),
-        ("quotes", client.get_quotes),
     ]
-    # Get stats of every tweet based on the possible operations to perform
-    i = 0
+    # Get the list of months
+    months = utils.get_month_interval()
+    start_time, end_time = months[0][0], months[8][1]
+    # TODO check format of times according to twitters api
+    # Start retrieving stats of every tweet based on the possible operations to perform
+    print(
+        "Getting tweets with their respecive ",
+        ", ".join([o for o, _ in operations]),
+        "...",
+    )
     for tweet in client.get_tweets():
         tweet_id = tweet["id"]
         # Count the amount of interactions per tweet just for debugging purpouses
@@ -77,8 +86,3 @@ if __name__ == "__main__":
             f"[{tweet_id}]: ",
             ", ".join([f"{i}={interactions[i]}" for i in interactions]),
         )
-        i += 1
-        if i == 19:
-            break
-
-    print(db)

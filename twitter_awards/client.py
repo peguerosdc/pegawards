@@ -34,9 +34,9 @@ class TwitterClient(object):
             api_version="2",
             auth_type="oAuth1",
         )
-        self.scrapper = TwitterScrapper(csrf_token, authorization, cookie)
         # Init users data as it will be used in later requests
         self.me(refresh=True)
+        self.scrapper = TwitterScrapper(self.me()["id"], csrf_token, authorization, cookie)
 
     def me(self, refresh=False):
         """ Request the data of the user matching this ACCESS_TOKEN and ACCESS_TOKEN_SECRET """
@@ -82,15 +82,22 @@ class TwitterClient(object):
             else:
                 followers = []
 
-    def get_tweets(self, page_size=100):
+    def get_tweets(self, start_time=None, end_time=None, page_size=100):
         def request_tweets(next_token=None):
+            # Builds params for this request
+            params = {
+                "max_results": page_size,
+                "pagination_token": next_token,
+                "tweet.fields": "in_reply_to_user_id",
+            }
+            if start_time:
+                params["start_time"] = start_time
+            if end_time:
+                params["end_time"] = end_time
+            # Perform request
             req = self.api2.request(
                 f"users/:{self.metadata['id']}/tweets",
-                params={
-                    "max_results": page_size,
-                    "pagination_token": next_token,
-                    "tweet.fields": "in_reply_to_user_id",
-                },
+                params=params,
             )
             response = req.response.json()
             return response.get("data", []), response.get("meta", dict())
@@ -126,20 +133,4 @@ class TwitterClient(object):
         return self.scrapper.get_quotes(tweet_id)
 
     def get_replies(self, tweet_id):
-        # Consider this tweet is the beginning of a conversation
-        data = self.api2.request(
-            f"tweets/:{tweet_id}", params={"tweet.fields": "conversation_id"}
-        ).response.json()
-        # conversation_id = data['data'].get('conversation_id', None)
-        # if conversation_id:
-        # get thread
-        # thread_data = self.api.request(f"tweets/search/recent", params={'query': f"conversation_id:{tweet_id}"}, api_version="2").response.json()
-
-    def get_replies_to_me(self):
-        username = self.metadata["screen_name"]
-        # try to get next reply
-        pager = TwitterPager(
-            self.api, "search/tweets", {"q": f"to:{username} filter:replies"}
-        )
-        for reply in pager.get_iterator():
-            yield reply
+        return self.scrapper.get_replies(tweet_id)
