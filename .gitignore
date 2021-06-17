@@ -130,3 +130,6 @@ dmypy.json
 
 # Twitter keys
 pegawards.dev.env
+
+# Local Twitter API
+TwitterAPI

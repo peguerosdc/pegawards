@@ -1,5 +1,10 @@
-from TwitterAPI import TwitterAPI, TwitterPager
-from scrapper import TwitterScrapper
+from .scrapper import TwitterScrapper
+
+# .TwitterAPI is a local copy used for development purposes. If not present, import from the installed module (prod)
+try:
+    from .TwitterAPI import TwitterAPI, TwitterPager
+except ImportError:
+    from TwitterAPI import TwitterAPI, TwitterPager
 
 
 class TwitterClient(object):

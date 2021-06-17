@@ -63,5 +63,7 @@ class TwitterScrapper:
                 next_cursor = find_cursor(data)
                 if next_cursor:
                     return users + perform_request(tweet_id, next_cursor)
+            
+            return users
 
         return perform_request()

@@ -1,6 +1,5 @@
 from twitter_awards.client import TwitterClient
 from twitter_awards import utils
-import logging
 
 
 def get_api_keys():
@@ -74,7 +73,10 @@ if __name__ == "__main__":
                 if candidate in db:
                     db[candidate][label] += 1
                     interactions[label] += 1
-        logging.debug(f"[{tweet_id}]: ", ", ".join([f"{i}={interactions[i]}" for i in interactions]))
+        print(
+            f"[{tweet_id}]: ",
+            ", ".join([f"{i}={interactions[i]}" for i in interactions]),
+        )
         i += 1
         if i == 19:
             break
