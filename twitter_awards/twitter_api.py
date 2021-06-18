@@ -36,7 +36,7 @@ class MyTwitterAPI:
         if req.status_code != 200:
             raise ValueError("Twitter credentials not valid. Unable to verify user")
         return req.response.json()
-    
+
     def get_followers(self, user_id, page_size=100):
         """Use v2 endpoint to get the followers of this account. Followers are paginated by the max amount which is 1000
         See:
@@ -62,7 +62,7 @@ class MyTwitterAPI:
                 followers, meta = request_followers(next_token)
             else:
                 followers = []
-    
+
     def get_tweets(self, user_id, start_time=None, end_time=None, page_size=100):
         def request_tweets(next_token=None):
             # Builds params for this request
@@ -70,11 +70,9 @@ class MyTwitterAPI:
                 "max_results": page_size,
                 "pagination_token": next_token,
                 "tweet.fields": "in_reply_to_user_id",
+                "start_time": start_time,
+                "end_time": end_time,
             }
-            if start_time:
-                params["start_time"] = start_time
-            if end_time:
-                params["end_time"] = end_time
             # Perform request
             req = self.api2.request(
                 f"users/:{user_id}/tweets",
@@ -100,7 +98,7 @@ class MyTwitterAPI:
         req = self.api2.request(f"tweets/:{tweet_id}/liking_users")
         res = req.response.json()
         return [user["id"] for user in res.get("data", [])]
-    
+
     def get_retweeters(self, tweet_id):
         # Get the list of everyone who has retweeted this tweet
         req = self.api1.request(

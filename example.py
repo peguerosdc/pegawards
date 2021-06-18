@@ -44,6 +44,12 @@ def get_my_client():
     )
 
 
+def get_current_timezone():
+    import pytz
+
+    return pytz.timezone("America/Mexico_City")
+
+
 if __name__ == "__main__":
     # Get Twitter client with the current API keys
     client = get_my_client()
@@ -61,16 +67,16 @@ if __name__ == "__main__":
         ("favs", client.get_tweet_favs),
     ]
     # Get the list of months
-    months = utils.get_month_interval()
-    start_time, end_time = months[0][0], months[8][1]
-    # TODO check format of times according to twitters api
+    months = utils.get_month_interval(2021, get_current_timezone())
+    start_time, end_time = months[0][0], months[7][1]
     # Start retrieving stats of every tweet based on the possible operations to perform
     print(
         "Getting tweets with their respecive ",
         ", ".join([o for o, _ in operations]),
+        f"{'from '+start_time+' to '+end_time if start_time and end_time else ''}",
         "...",
     )
-    for tweet in client.get_tweets():
+    for tweet in client.get_tweets(start_time, end_time):
         tweet_id = tweet["id"]
         # Count the amount of interactions per tweet just for debugging purpouses
         interactions = dict()

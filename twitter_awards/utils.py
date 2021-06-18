@@ -1,3 +1,7 @@
+from datetime import datetime
+import calendar
+
+
 def get_db_of_followers(followers):
     db = dict()
     for follower in followers:
@@ -10,18 +14,14 @@ def get_db_of_followers(followers):
     return db
 
 
-def get_month_interval():
-    return [
-        ("2020-01-01", "2020-01-31"),
-        ("2020-02-01", "2020-02-29"),
-        ("2020-03-01", "2020-03-31"),
-        ("2020-04-01", "2020-04-30"),
-        ("2020-05-01", "2020-05-31"),
-        ("2020-06-01", "2020-06-30"),
-        ("2020-07-01", "2020-07-31"),
-        ("2020-08-01", "2020-08-31"),
-        ("2020-09-01", "2020-09-31"),
-        ("2020-10-01", "2020-10-31"),
-        ("2020-11-01", "2020-11-30"),
-        ("2020-12-01", "2020-12-31"),
-    ]
+def get_month_interval(year, timezone):
+    """
+    For every month in the year, get the start and last day
+    """
+    result = []
+    for month in range(1, 13):
+        _, last_day = calendar.monthrange(year, month)
+        first_date = datetime(year, month, 1, tzinfo=timezone)
+        last_date = datetime(year, month, last_day, tzinfo=timezone)
+        result += [(first_date.isoformat(), last_date.isoformat())]
+    return result
