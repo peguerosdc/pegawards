@@ -14,3 +14,7 @@ To set up the scrapper, go to [Twitter](www.twitter.com) (while logged in) from 
 * cookie
 
 And set them as environment variables (again, see `pegawards.env` for an example). **Please note that `COOKIE` must be set with single quotes**.
+
+## License
+
+Licensed under the [MIT License](https://github.com/peguerosdc/pegawards/blob/master/LICENSE). Only for educational purposes.
