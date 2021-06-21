@@ -1,6 +1,7 @@
 from twitter_awards.file_helper import TweetsWriter
 from twitter_awards.client import TwitterClient
 from twitter_awards import utils
+import argparse
 
 
 def get_api_keys():
@@ -51,7 +52,25 @@ def get_current_timezone():
     return pytz.timezone("America/Mexico_City")
 
 
+def create_parser():
+    parser = argparse.ArgumentParser(
+        description="Download your tweets and its metadata of a given month/year"
+    )
+    parser.add_argument(
+        "month",
+        metavar="m",
+        type=int,
+        choices=list(range(1, 13)),
+        help="Month [1,2,3,4,5,6,7,8,9,10,11,12]",
+    )
+    parser.add_argument("year", metavar="y", type=int, help="Year")
+    return parser
+
+
 if __name__ == "__main__":
+    # Parse arguments
+    parser = create_parser()
+    args = parser.parse_args()
     # Get Twitter client with the current API keys
     client = get_my_client()
     # Print the users metadata as an example
@@ -67,8 +86,8 @@ if __name__ == "__main__":
     # Start creating a DB with the followers
     db = utils.get_db_of_followers(client.get_followers(), operations)
     # Get the list of months
-    months = utils.get_month_interval(2021, get_current_timezone())
-    start_time, end_time = months[0][0], months[4][1]
+    months = utils.get_month_interval(args.year, get_current_timezone())
+    start_time, end_time = months[args.month - 1][0], months[args.month - 1][1]
     # Start retrieving stats of every tweet based on the possible operations to perform
     print(
         "Getting tweets with their respective ",
@@ -77,7 +96,9 @@ if __name__ == "__main__":
         "...",
     )
     with TweetsWriter(
-        "./data/may2021_tweets.csv", "./data/may2021_followers.csv", operations
+        f"./data/{args.month}_{args.year}_tweets.csv",
+        f"./data/{args.month}_{args.year}_followers.csv",
+        operations,
     ) as tweets_metrics_file:
         # Start getting tweets
         for tweet in client.get_tweets(start_time, end_time):
