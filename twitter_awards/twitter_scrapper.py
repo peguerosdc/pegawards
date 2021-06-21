@@ -138,11 +138,6 @@ class TwitterScrapper:
                 is_reply_to_tweet = in_reply_to_status_id == tweet_id
                 if is_reply_to_me and is_reply_to_tweet:
                     users.append(tweet["user_id_str"])
-            # Perform the next request for every cursor that indicate a conversation
-            # cursors = find_cursors_in_reply(data)
-            # for next_cursor in cursors:
-            #     users += perform_request(tweet_id, next_cursor)
-            # Return the collected users
             return users
 
         return perform_request(tweet_id)

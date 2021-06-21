@@ -51,46 +51,33 @@ def get_current_timezone():
     return pytz.timezone("America/Mexico_City")
 
 
-def get_operation_from_metrics(tweet, interaction):
-    if interaction == "RTs":
-        label = "retweet_count"
-    elif interaction == "favs":
-        label = "like_count"
-    elif interaction == "replies":
-        label = "reply_count"
-    else:
-        label = "quote_count"
-    return tweet["public_metrics"][label]
-
-
 if __name__ == "__main__":
     # Get Twitter client with the current API keys
     client = get_my_client()
     # Print the users metadata as an example
     user = client.me()
     print(f"User: {user['name']} ({user['id']}). Followers: {user['followers_count']}")
-    # Start creating a DB with the followers
-    db = utils.get_db_of_followers(client.get_followers())
-
     # List of possible operations that the user can perform on every tweet
     operations = [
-        ("quotes", client.get_quotes),
-        ("replies", client.get_replies),
-        ("RTs", client.get_retweeters),
-        ("favs", client.get_tweet_favs),
+        ("quote_count", client.get_quotes),
+        ("reply_count", client.get_replies),
+        ("retweet_count", client.get_retweeters),
+        ("like_count", client.get_tweet_favs),
     ]
+    # Start creating a DB with the followers
+    db = utils.get_db_of_followers(client.get_followers(), operations)
     # Get the list of months
     months = utils.get_month_interval(2021, get_current_timezone())
     start_time, end_time = months[0][0], months[4][1]
     # Start retrieving stats of every tweet based on the possible operations to perform
     print(
-        "Getting tweets with their respecive ",
+        "Getting tweets with their respective ",
         ", ".join([o for o, _ in operations]),
         f"{'from '+start_time+' to '+end_time if start_time and end_time else ''}",
         "...",
     )
     with TweetsWriter(
-        "./data/may2021_tweets.csv", "./data/may2021_followers.csv"
+        "./data/may2021_tweets.csv", "./data/may2021_followers.csv", operations
     ) as tweets_metrics_file:
         # Start getting tweets
         for tweet in client.get_tweets(start_time, end_time):
@@ -109,7 +96,7 @@ if __name__ == "__main__":
                 f"[{tweet_id}]: ",
                 ",\t".join(
                     [
-                        f"{i}={interactions[i]}/{get_operation_from_metrics(tweet, i)}"
+                        f"{i}={interactions[i]}/{tweet['public_metrics'][i]}"
                         for i in interactions
                     ]
                 ),

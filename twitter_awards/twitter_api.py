@@ -1,8 +1,27 @@
+import time
+
 # .TwitterAPI is a local copy used for development purposes. If not present, import from the installed module (prod)
 try:
     from .TwitterAPI import TwitterAPI
 except ImportError:
     from TwitterAPI import TwitterAPI
+
+
+def auto_retry(request):
+    def aux(*args, **kwargs):
+        # Try to perform the request several times
+        retries = 3
+        while retries > 0:
+            try:
+                response = request(*args, **kwargs)
+                return response
+            except Exception as e:
+                print(e)
+                retries = retries - 1
+                time.sleep(3)
+        raise Exception("Request failed after 3 retries")
+
+    return aux
 
 
 class MyTwitterAPI:
@@ -43,6 +62,7 @@ class MyTwitterAPI:
         https://developer.twitter.com/en/docs/twitter-api/users/follows/quick-start
         """
 
+        @auto_retry
         def request_followers(next_token=None):
             req = self.api2.request(
                 f"users/:{user_id}/followers",
@@ -64,6 +84,7 @@ class MyTwitterAPI:
                 followers = []
 
     def get_tweets(self, user_id, start_time=None, end_time=None, page_size=100):
+        @auto_retry
         def request_tweets(next_token=None):
             # Builds params for this request
             params = {
@@ -93,12 +114,14 @@ class MyTwitterAPI:
             else:
                 tweets = []
 
+    @auto_retry
     def get_tweet_favs(self, tweet_id):
         # Get the list of users who liked this tweet
         req = self.api2.request(f"tweets/:{tweet_id}/liking_users")
         res = req.response.json()
         return [user["id"] for user in res.get("data", [])]
 
+    @auto_retry
     def get_retweeters(self, tweet_id):
         # Get the list of everyone who has retweeted this tweet
         req = self.api1.request(
