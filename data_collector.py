@@ -1,3 +1,4 @@
+from twitter_awards.file_helper import TweetsWriter
 from twitter_awards.client import TwitterClient
 from twitter_awards import utils
 
@@ -50,6 +51,18 @@ def get_current_timezone():
     return pytz.timezone("America/Mexico_City")
 
 
+def get_operation_from_metrics(tweet, interaction):
+    if interaction == "RTs":
+        label = "retweet_count"
+    elif interaction == "favs":
+        label = "like_count"
+    elif interaction == "replies":
+        label = "reply_count"
+    else:
+        label = "quote_count"
+    return tweet["public_metrics"][label]
+
+
 if __name__ == "__main__":
     # Get Twitter client with the current API keys
     client = get_my_client()
@@ -68,7 +81,7 @@ if __name__ == "__main__":
     ]
     # Get the list of months
     months = utils.get_month_interval(2021, get_current_timezone())
-    start_time, end_time = months[0][0], months[7][1]
+    start_time, end_time = months[0][0], months[4][1]
     # Start retrieving stats of every tweet based on the possible operations to perform
     print(
         "Getting tweets with their respecive ",
@@ -76,19 +89,33 @@ if __name__ == "__main__":
         f"{'from '+start_time+' to '+end_time if start_time and end_time else ''}",
         "...",
     )
-    for tweet in client.get_tweets(start_time, end_time):
-        tweet_id = tweet["id"]
-        # Count the amount of interactions per tweet just for debugging purpouses
-        interactions = dict()
-        # Check which users performed every operation and store the counts in a dict()
-        for label, operation in operations:
-            interactions[label] = 0
-            for candidate in operation(tweet_id):
-                # Update count in the db only for my followers
-                if candidate in db:
-                    db[candidate][label] += 1
-                    interactions[label] += 1
-        print(
-            f"[{tweet_id}]: ",
-            ", ".join([f"{i}={interactions[i]}" for i in interactions]),
-        )
+    with TweetsWriter(
+        "./data/may2021_tweets.csv", "./data/may2021_followers.csv"
+    ) as tweets_metrics_file:
+        # Start getting tweets
+        for tweet in client.get_tweets(start_time, end_time):
+            tweet_id = tweet["id"]
+            # Count the amount of interactions per tweet just for debugging purpouses
+            interactions = dict()
+            # Check which users performed every operation and store the counts in a dict()
+            for label, operation in operations:
+                interactions[label] = 0
+                for candidate in operation(tweet_id):
+                    # Update count in the db only for my followers
+                    if candidate in db:
+                        db[candidate][label] += 1
+                        interactions[label] += 1
+            print(
+                f"[{tweet_id}]: ",
+                ",\t".join(
+                    [
+                        f"{i}={interactions[i]}/{get_operation_from_metrics(tweet, i)}"
+                        for i in interactions
+                    ]
+                ),
+            )
+            # Save public metrics of this tweet
+            tweets_metrics_file.write_tweet(tweet)
+        # Write the results of the followers
+        for follower_id in db:
+            tweets_metrics_file.write_follower(db[follower_id])

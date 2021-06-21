@@ -133,3 +133,6 @@ pegawards.dev.env
 
 # Local Twitter API
 TwitterAPI
+
+# Data files
+*.csv
