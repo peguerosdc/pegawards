@@ -69,7 +69,7 @@ class MyTwitterAPI:
             params = {
                 "max_results": page_size,
                 "pagination_token": next_token,
-                "tweet.fields": "in_reply_to_user_id",
+                "tweet.fields": "in_reply_to_user_id,created_at,public_metrics",
                 "start_time": start_time,
                 "end_time": end_time,
             }

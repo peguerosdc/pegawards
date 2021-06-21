@@ -1,4 +1,5 @@
 import requests
+import time
 
 
 def find_cursors_in_reply(data):
@@ -45,11 +46,16 @@ def build_url_with_cursor(base_url, cursor):
 
 
 class TwitterScrapper:
-    def __init__(self, user_id, csrf_token, authorization, cookie):
+    def __init__(
+        self, user_id, csrf_token, authorization, cookie, cooldown_time_ms=4000
+    ):
         self.user_id = str(user_id)
         self.csrf_token = csrf_token
         self.authorization = authorization
         self.cookie = cookie
+        # value used to prevent the API from overheating
+        self.last_request_timestamp = None
+        self.cooldown_time_ms = cooldown_time_ms
 
     def _call_twitter_inner_api(self, base_url, cursor=None):
         # Build url with cursor
@@ -64,8 +70,14 @@ class TwitterScrapper:
             "x-twitter-auth-type": "OAuth2Session",
             "cookie": self.cookie,
         }
-        req = requests.get(url, headers=headers)
-        return req.json()
+        # Perform the request and let some time to cool down
+        try:
+            req = requests.get(url, headers=headers)
+            time.sleep(self.cooldown_time_ms / 1000)
+            data = req.json()
+        except Exception as e:
+            data = None
+        return data
 
     def get_quotes(self, tweet_id):
         """
@@ -115,13 +127,21 @@ class TwitterScrapper:
             for temp_id in tweets:
                 tweet = tweets[temp_id]
                 in_reply_to_id = tweet.get("in_reply_to_user_id_str", None)
-                # Check if it is a reply to me and count it
-                if in_reply_to_id and in_reply_to_id == self.user_id:
+                in_reply_to_status_id = tweet.get("in_reply_to_status_id_str", None)
+                owner_id = tweet.get("user_id_str", None)
+                # Check if it is a reply to me and to this tweet and count it
+                is_reply_to_me = (
+                    in_reply_to_id == self.user_id
+                    and owner_id
+                    and owner_id != self.user_id
+                )
+                is_reply_to_tweet = in_reply_to_status_id == tweet_id
+                if is_reply_to_me and is_reply_to_tweet:
                     users.append(tweet["user_id_str"])
             # Perform the next request for every cursor that indicate a conversation
-            cursors = find_cursors_in_reply(data)
-            for next_cursor in cursors:
-                users += perform_request(tweet_id, next_cursor)
+            # cursors = find_cursors_in_reply(data)
+            # for next_cursor in cursors:
+            #     users += perform_request(tweet_id, next_cursor)
             # Return the collected users
             return users
 
