@@ -1,4 +1,5 @@
 import time
+import traceback
 
 # .TwitterAPI is a local copy used for development purposes. If not present, import from the installed module (prod)
 try:
@@ -15,10 +16,10 @@ def auto_retry(request):
             try:
                 response = request(*args, **kwargs)
                 return response
-            except Exception as e:
-                print(e)
+            except Exception:
+                traceback.print_exc()
                 retries = retries - 1
-                time.sleep(3)
+                time.sleep(60)
         raise Exception("Request failed after 3 retries")
 
     return aux
@@ -68,6 +69,8 @@ class MyTwitterAPI:
                 f"users/:{user_id}/followers",
                 params={"max_results": page_size, "pagination_token": next_token},
             )
+            if req.status_code != 200:
+                raise ValueError("Error while fetching followers: ", req.text)
             response = req.response.json()
             return response.get("data", []), response.get("meta", dict())
 
@@ -99,7 +102,11 @@ class MyTwitterAPI:
                 f"users/:{user_id}/tweets",
                 params=params,
             )
+            if req.status_code != 200:
+                raise ValueError("Error while fetching tweets: ", req.text)
             response = req.response.json()
+            # This request can be performed every second
+            time.sleep(1)
             return response.get("data", []), response.get("meta", dict())
 
         # Start returning tweets
@@ -116,17 +123,24 @@ class MyTwitterAPI:
 
     @auto_retry
     def get_tweet_favs(self, tweet_id):
-        # Get the list of users who liked this tweet
+        # Get the list of users who liked this tweet.
         req = self.api2.request(f"tweets/:{tweet_id}/liking_users")
+        if req.status_code != 200:
+            raise ValueError("Error while fetching favs: ", req.text)
         res = req.response.json()
+        # This request can only be done every 15 seconds
+        time.sleep(15)
         return [user["id"] for user in res.get("data", [])]
 
     @auto_retry
     def get_retweeters(self, tweet_id):
         # Get the list of everyone who has retweeted this tweet
+        # This request has no rate limit
         req = self.api1.request(
             f"statuses/retweeters/ids",
             params={"id": tweet_id, "count": 100, "stringify_ids": True},
         )
+        if req.status_code != 200:
+            raise ValueError("Error while fetching RTs: ", req.text)
         res = req.response.json()
         return res.get("ids", [])

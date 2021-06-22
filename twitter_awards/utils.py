@@ -20,7 +20,7 @@ def get_month_interval(year, timezone):
     result = []
     for month in range(1, 13):
         _, last_day = calendar.monthrange(year, month)
-        first_date = datetime(year, month, 1, tzinfo=timezone)
-        last_date = datetime(year, month, last_day, 23, 59, 59, tzinfo=timezone)
+        first_date = timezone.localize(datetime(year, month, 1, 0, 0, 0))
+        last_date = timezone.localize(datetime(year, month, last_day, 23, 59, 59))
         result += [(first_date.isoformat(), last_date.isoformat())]
     return result

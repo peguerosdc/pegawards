@@ -47,7 +47,7 @@ def build_url_with_cursor(base_url, cursor):
 
 class TwitterScrapper:
     def __init__(
-        self, user_id, csrf_token, authorization, cookie, cooldown_time_ms=4000
+        self, user_id, csrf_token, authorization, cookie, cooldown_time_ms=5000
     ):
         self.user_id = str(user_id)
         self.csrf_token = csrf_token
