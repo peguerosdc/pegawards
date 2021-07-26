@@ -2,6 +2,19 @@ from twitter_awards.file_helper import TweetsWriter
 from twitter_awards.client import TwitterClient
 from twitter_awards import utils
 import argparse
+import logging
+from datetime import datetime
+
+
+def set_up_logging(month, year):
+    logging.basicConfig(
+        filename=f"./data/log_{month}_{year}.txt",
+        filemode="w",
+        format="%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s",
+        datefmt="%H:%M:%S",
+        level=logging.DEBUG,
+    )
+    logging.info(f"Log file with metadata from {month}/{year}")
 
 
 def get_api_keys():
@@ -67,6 +80,25 @@ def create_parser():
     return parser
 
 
+def get_created_at_nth(created_at):
+    d = datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%S.%fZ")
+    return d.strftime("%d")
+
+
+def print_tweet(tweet, interactions):
+    message = (
+        f"[{tweet['id']}/{get_created_at_nth(tweet['created_at'])}th]: "
+        + ",\t".join(
+            [
+                f"{i}={interactions[i]}/{tweet['public_metrics'][i]}"
+                for i in interactions
+            ]
+        )
+    )
+    print(message)
+    logging.info(message)
+
+
 if __name__ == "__main__":
     # Parse arguments
     parser = create_parser()
@@ -95,6 +127,8 @@ if __name__ == "__main__":
         f"{'from '+start_time+' to '+end_time if start_time and end_time else ''}",
         "...",
     )
+    # set up logging
+    set_up_logging(args.month, args.year)
     with TweetsWriter(
         f"./data/{args.month}_{args.year}_tweets.csv",
         f"./data/{args.month}_{args.year}_followers.csv",
@@ -113,15 +147,8 @@ if __name__ == "__main__":
                     if candidate in db:
                         db[candidate][label] += 1
                         interactions[label] += 1
-            print(
-                f"[{tweet_id}]: ",
-                ",\t".join(
-                    [
-                        f"{i}={interactions[i]}/{tweet['public_metrics'][i]}"
-                        for i in interactions
-                    ]
-                ),
-            )
+            # Print and log results
+            print_tweet(tweet, interactions)
             # Save public metrics of this tweet
             tweets_metrics_file.write_tweet(tweet)
         # Write the results of the followers

@@ -1,5 +1,6 @@
 import requests
 import time
+import logging
 
 
 def find_cursors_in_reply(data):
@@ -56,6 +57,8 @@ class TwitterScrapper:
         # value used to prevent the API from overheating
         self.last_request_timestamp = None
         self.cooldown_time_ms = cooldown_time_ms
+        # init logger
+        self.logger = logging.getLogger("TwitterScrapper")
 
     def _call_twitter_inner_api(self, base_url, cursor=None):
         # Build url with cursor
@@ -75,7 +78,9 @@ class TwitterScrapper:
             req = requests.get(url, headers=headers)
             time.sleep(self.cooldown_time_ms / 1000)
             data = req.json()
+            self.logger.debug(data)
         except Exception as e:
+            self.logger.exception("Unable to handle request")
             data = None
         return data
 
