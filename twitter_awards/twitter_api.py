@@ -86,14 +86,35 @@ class MyTwitterAPI:
             else:
                 followers = []
 
-    def get_tweets(self, user_id, start_time=None, end_time=None, page_size=100):
+    @auto_retry
+    def get_tweets(self, tweets_ids):
+        """
+        Only 100 tweet_ids can be queried at a time
+        See:
+        https://developer.twitter.com/en/docs/twitter-api/tweets/lookup/api-reference/get-tweets
+        """
+        # Get this list of tweets
+        params = {
+            "ids": ",".join([str(t) for t in tweets_ids]),
+            "tweet.fields": "created_at,referenced_tweets",
+            "expansions": "author_id,referenced_tweets.id,referenced_tweets.id.author_id",
+        }
+        req = self.api2.request(f"tweets", params=params)
+        if req.status_code != 200:
+            raise ValueError(f"Error while fetching tweets {tweets_ids}: ", req.text)
+        res = req.response.json()
+        # This request can only be done every 1 second
+        time.sleep(2)
+        return res.get("data", [])
+
+    def get_user_tweets(self, user_id, start_time=None, end_time=None, page_size=100):
         @auto_retry
         def request_tweets(next_token=None):
             # Builds params for this request
             params = {
                 "max_results": page_size,
                 "pagination_token": next_token,
-                "tweet.fields": "in_reply_to_user_id,created_at,public_metrics",
+                "tweet.fields": "author_id,in_reply_to_user_id,created_at,public_metrics",
                 "start_time": start_time,
                 "end_time": end_time,
             }

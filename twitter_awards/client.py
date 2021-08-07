@@ -28,11 +28,14 @@ class TwitterClient(object):
             self.metadata = self.api.me()
         return self.metadata
 
+    def get_tweets(self, tweets_ids):
+        return self.api.get_tweets(tweets_ids)
+
     def get_followers(self):
         return self.api.get_followers(self.metadata["id"])
 
-    def get_tweets(self, start_time=None, end_time=None):
-        return self.api.get_tweets(
+    def get_user_tweets(self, start_time=None, end_time=None):
+        return self.api.get_user_tweets(
             self.metadata["id"], start_time=start_time, end_time=end_time
         )
 

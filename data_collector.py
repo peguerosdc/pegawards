@@ -129,28 +129,29 @@ if __name__ == "__main__":
     )
     # set up logging
     set_up_logging(args.month, args.year)
-    with TweetsWriter(
+    tweets_metrics_file = TweetsWriter(
+        user,
         f"./data/{args.month}_{args.year}_tweets.csv",
         f"./data/{args.month}_{args.year}_followers.csv",
         operations,
-    ) as tweets_metrics_file:
-        # Start getting tweets
-        for tweet in client.get_tweets(start_time, end_time):
-            tweet_id = tweet["id"]
-            # Count the amount of interactions per tweet just for debugging purpouses
-            interactions = dict()
-            # Check which users performed every operation and store the counts in a dict()
-            for label, operation in operations:
-                interactions[label] = 0
-                for candidate in operation(tweet_id):
-                    # Update count in the db only for my followers
-                    if candidate in db:
-                        db[candidate][label] += 1
-                        interactions[label] += 1
-            # Print and log results
-            print_tweet(tweet, interactions)
-            # Save public metrics of this tweet
-            tweets_metrics_file.write_tweet(tweet)
-        # Write the results of the followers
-        for follower_id in db:
-            tweets_metrics_file.write_follower(db[follower_id])
+    )
+    # Start getting tweets
+    for tweet in client.get_user_tweets(start_time, end_time):
+        tweet_id = tweet["id"]
+        # Count the amount of interactions per tweet just for debugging purpouses
+        interactions = dict()
+        # Check which users performed every operation and store the counts in a dict()
+        for label, operation in operations:
+            interactions[label] = 0
+            for candidate in operation(tweet_id):
+                # Update count in the db only for my followers
+                if candidate in db:
+                    db[candidate][label] += 1
+                    interactions[label] += 1
+        # Print and log results
+        print_tweet(tweet, interactions)
+        # Save public metrics of this tweet
+        tweets_metrics_file.write_tweet(tweet)
+    # Write the results of the followers
+    for follower_id in db:
+        tweets_metrics_file.write_follower(db[follower_id])

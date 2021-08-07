@@ -39,6 +39,10 @@ Some recommendations:
 
 * Run month by month to prevent the Twitter Scrapper from failing
 
+### Analysis
+
+See the Jupyter notebooks for some use-cases.
+
 ## License
 
 Licensed under the [MIT License](https://github.com/peguerosdc/pegawards/blob/master/LICENSE). Only for educational purposes.

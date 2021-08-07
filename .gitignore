@@ -135,4 +135,4 @@ pegawards.dev.env
 TwitterAPI
 
 # Data files
-*.csv
+data/*.*
